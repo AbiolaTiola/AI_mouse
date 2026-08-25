@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hifz Companion — Quran Memorization</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">📖</span>
+      <span class="brand-name">Hifz Companion</span>
+    </div>
+    <button id="settingsToggle" class="icon-btn" title="Settings" aria-label="Toggle settings">⚙️</button>
+  </header>
+
+  <main class="layout">
+
+    <!-- SETTINGS PANEL -->
+    <aside id="settingsPanel" class="panel settings-panel">
+      <h2>Session Setup</h2>
+
+      <div class="field">
+        <label for="surahSelect">Surah</label>
+        <select id="surahSelect"></select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="startAyah">From Ayah</label>
+          <select id="startAyah"></select>
+        </div>
+        <div class="field">
+          <label for="endAyah">To Ayah</label>
+          <select id="endAyah"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="reciterSelect">Reciter</label>
+        <select id="reciterSelect"></select>
+        <button id="addReciterBtn" class="link-btn" type="button">+ Add a reciter (URL or your own recordings)</button>
+      </div>
+
+      <div class="field">
+        <label for="repeatCount">Repeat each verse <span id="repeatCountVal">3</span>×</label>
+        <input type="range" id="repeatCount" min="1" max="15" value="3" />
+      </div>
+
+      <div class="field">
+        <label for="pauseAfter">Pause after each repeat (your turn) <span id="pauseAfterVal">4</span>s</label>
+        <input type="range" id="pauseAfter" min="0" max="15" value="4" />
+      </div>
+
+      <div class="field">
+        <label for="pauseBetween">Pause between verses <span id="pauseBetweenVal">1.5</span>s</label>
+        <input type="range" id="pauseBetween" min="0" max="10" step="0.5" value="1.5" />
+      </div>
+
+      <div class="field">
+        <label for="rangeRepeats">Repeat whole range <span id="rangeRepeatsVal">1</span>×</label>
+        <input type="range" id="rangeRepeats" min="1" max="10" value="1" />
+      </div>
+
+      <div class="field checkbox-field">
+        <label><input type="checkbox" id="showTranslation" checked /> Show translation</label>
+      </div>
+
+      <div class="field checkbox-field">
+        <label><input type="checkbox" id="advanceMode" checked /> Auto-advance to next verse</label>
+      </div>
+
+      <p class="hint" id="reciterHint"></p>
+    </aside>
+
+    <!-- PLAYER -->
+    <section class="panel player-panel">
+      <div class="progress-row">
+        <span id="progressLabel">Select a surah to begin</span>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      </div>
+
+      <div class="verse-card">
+        <div class="verse-meta">
+          <span id="verseRef">—</span>
+          <button id="uploadVerseBtn" class="link-btn small" type="button" title="Attach your own recording for this verse">🎙️ attach audio for this verse</button>
+        </div>
+        <p id="arabicText" class="arabic-text" dir="rtl" lang="ar">Choose a Surah and press Play to begin your memorization session.</p>
+        <p id="translationText" class="translation-text"></p>
+        <div id="turnBanner" class="turn-banner hidden">🗣️ Your turn — repeat it now</div>
+      </div>
+
+      <audio id="audioEl" preload="auto"></audio>
+      <input id="fileInput" type="file" accept="audio/*" class="hidden" />
+
+      <div class="controls">
+        <button id="prevBtn" class="ctrl-btn" title="Previous verse">⏮</button>
+        <button id="playBtn" class="ctrl-btn primary" title="Play">▶️</button>
+        <button id="stopBtn" class="ctrl-btn" title="Stop">⏹</button>
+        <button id="nextBtn" class="ctrl-btn" title="Next verse">⏭</button>
+      </div>
+
+      <div class="status-row">
+        <span id="repStatus"></span>
+        <span id="loadStatus" class="load-status"></span>
+      </div>
+    </section>
+
+  </main>
+
+  <dialog id="addReciterDialog">
+    <form method="dialog" id="addReciterForm">
+      <h3>Add a reciter</h3>
+      <p class="dialog-hint">
+        Use this for reciters not in the built-in list — for example a beloved local
+        reciter such as <strong>Sheikh Goni Tohir Dahiru</strong>. Either point to an audio
+        source that follows a per-verse URL pattern, or record/upload verses yourself as you
+        go using the 🎙️ button on each verse (stored privately in this browser).
+      </p>
+      <div class="field">
+        <label for="newReciterName">Name</label>
+        <input type="text" id="newReciterName" placeholder="e.g. Goni Tohir Dahiru" required />
+      </div>
+      <div class="field">
+        <label for="newReciterType">Source type</label>
+        <select id="newReciterType">
+          <option value="template">Direct URL pattern (I have a link source)</option>
+          <option value="upload">My own recordings only (upload per verse)</option>
+        </select>
+      </div>
+      <div class="field" id="templateField">
+        <label for="newReciterTemplate">URL template</label>
+        <input type="text" id="newReciterTemplate" placeholder="https://example.com/{surah3}{ayah3}.mp3" />
+        <p class="hint">Placeholders: <code>{surah}</code> <code>{ayah}</code> (plain numbers) or
+        <code>{surah3}</code> <code>{ayah3}</code> (zero-padded to 3 digits, e.g. 001007).</p>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" id="cancelReciterBtn" class="ctrl-btn">Cancel</button>
+        <button type="submit" class="ctrl-btn primary">Save reciter</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="footnote">
+    Quran text &amp; translation via AlQuran Cloud API. Built-in reciters via EveryAyah.com verse-by-verse
+    audio. Not every reciter (including some cherished local reciters) has a public, per-verse audio API —
+    use "Add a reciter" to plug in your own source or recordings.
+  </footer>
+
+</div>
+<script src="app.js" defer></script>
+</body>
+</html>
